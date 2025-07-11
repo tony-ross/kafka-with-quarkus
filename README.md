@@ -115,6 +115,61 @@ curl -X POST \
 }
 ```
 
+## 🗄️ MySQL Database Setup
+
+This application uses the **MySQL Sakila sample database** for demonstration purposes.
+
+### **Starting the MySQL Sakila Database**
+
+Run the MySQL Sakila database as a Docker container:
+
+```bash
+docker run -d --publish 3306:3306 --name mysqld restsql/mysql-sakila
+```
+
+> **📝 Note**
+> This Docker image was built for ARM64 architecture, thus if you are running on e.g. an M1 Mac, you need to instruct Docker to accept images built for a different platform by appending the flag `--platform linux/amd64` after `docker run` in the above command:
+>
+> ```bash
+> docker run -d --platform linux/amd64 --publish 3306:3306 --name mysqld restsql/mysql-sakila
+> ```
+
+### **Database Configuration**
+
+The application is configured to connect to the MySQL database with these settings:
+
+```properties
+quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/sakila
+quarkus.datasource.username=root
+quarkus.datasource.password=sakila
+quarkus.datasource.db-version=5.7.0
+```
+
+### **Database API Endpoints**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/messaging/db/health` | Database connection status (JSON) |
+| `GET` | `/api/messaging/actors` | Get top 10 actors from Sakila (JSON) |
+| `GET` | `/api/messaging/actors/search?firstName=John&lastName=Doe` | Search actors (JSON) |
+
+### **Database Usage Examples**
+
+**Check database health:**
+```bash
+curl http://localhost:8080/api/messaging/db/health
+```
+
+**Get top 10 actors:**
+```bash
+curl http://localhost:8080/api/messaging/actors
+```
+
+**Search for actors:**
+```bash
+curl "http://localhost:8080/api/messaging/actors/search?firstName=PENELOPE&lastName=GUINESS"
+```
+
 ## Packaging and running the application
 
 The application can be packaged using:
