@@ -7,6 +7,59 @@ This application combines:
 - 🌐 **Web interface** - Interactive web UI to manage messaging
 - 🚀 **REST API** - RESTful endpoints for integration
 
+## ⚠️ Important: Native Compilation Challenges on Mac ARM
+
+**🎯 Recommendation: Use JVM Mode for this application**
+
+Based on extensive testing, we **strongly recommend running this application in JVM mode** rather than attempting native compilation. Here's why:
+
+### **Native Compilation Issues Encountered:**
+
+1. **🏗️ Architecture Mismatch**
+   - Container-based builds produce Linux binaries incompatible with macOS
+   - Results in `exec format error` when attempting to run
+
+2. **🔧 GraalVM Requirements**
+   - Requires specific GraalVM version (23.1.0+) for Quarkus 3.20.1
+   - Complex installation and configuration needed
+   - Version compatibility issues between GraalVM and Quarkus
+
+3. **🌐 Complex Dependencies**
+   - Kafka client libraries have intricate native compilation requirements
+   - Netty framework causes class initialization conflicts
+   - Error: `Classes that should be initialized at run time got initialized during image building`
+
+4. **📦 Netty/Kafka Incompatibilities**
+   - Multiple buffer allocation classes fail native compilation
+   - Complex reflection configuration needed
+   - Unpredictable build failures with dependency updates
+
+### **✅ JVM Mode Benefits:**
+
+| Feature | JVM Mode ✅ | Native Mode ❌ |
+|---------|-------------|----------------|
+| **Startup Time** | ~2-3 seconds | ~0.1 seconds |
+| **Build Complexity** | Simple | Very Complex |
+| **Kafka Support** | Perfect | Problematic |
+| **Development** | Hot reload | Requires rebuild |
+| **Memory Usage** | Moderate | Lower |
+| **Debugging** | Full support | Limited |
+| **Reliability** | High | Unpredictable |
+
+### **🚀 Recommended Approach:**
+
+```bash
+# For development
+./mvnw quarkus:dev
+
+# For production
+./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+**Result**: Fast startup (~2-3 seconds), perfect Kafka integration, and reliable operation.
+
+---
 
 ## Running the application in dev mode
 
@@ -83,21 +136,35 @@ If you want to build an _über-jar_, execute the following command:
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
 
-## Creating a native executable
+## Creating a native executable ⚠️
 
-You can create a native executable using:
+> **⚠️ WARNING**: Native compilation is **NOT RECOMMENDED** for this Kafka-based application. See the [Important section](#️-important-native-compilation-challenges-on-mac-arm) above for detailed reasons.
+
+If you still want to attempt native compilation (not recommended), you can try:
 
 ```shell script
+# Requires GraalVM 23.1.0+ - often fails with Kafka dependencies
 ./mvnw package -Dnative
 ```
 
 Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
 
 ```shell script
+# Produces Linux binary - will NOT work on macOS
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/kafka-with-quarkus-1.0.0-SNAPSHOT-runner`
+**Expected Issues:**
+- `exec format error` on macOS (Linux binary produced)
+- Netty class initialization failures
+- Complex reflection configuration requirements
+- Unpredictable build failures
+
+**Instead, use the recommended JVM approach:**
+```bash
+./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
+```
 
 If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
 
@@ -148,9 +215,12 @@ This application uses the following Quarkus extensions:
 
 ### **Getting Started**
 
-1. **Start the application**:
+#### **🚀 Recommended: JVM Mode (Production)**
+
+1. **Build and run the application**:
    ```bash
-   ./mvnw quarkus:dev
+   ./mvnw package
+   java -jar target/quarkus-app/quarkus-run.jar
    ```
 
 2. **Open your browser**: <http://localhost:8080/api/messaging/>
@@ -158,6 +228,17 @@ This application uses the following Quarkus extensions:
 3. **Send messages**: Use the web form or API endpoints
 
 4. **Monitor output**: Watch your terminal for processed messages with `>>` prefix
+
+#### **🔧 Alternative: Development Mode**
+
+1. **Start in development mode** (with hot reload):
+   ```bash
+   ./mvnw quarkus:dev
+   ```
+
+2. **Access the application**: <http://localhost:8080/api/messaging/>
+
+**Note**: Development mode is perfect for coding and testing, but use JVM mode for production deployments.
 
 ---
 
